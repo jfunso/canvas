@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+ <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+      <title>Image Manipulation</title>
+
+      <style>
+ 
+	*{
+
+    border:0;
+
+    padding:0;
+
+    margin:0;
+
+}
+
+canvas{
+
+    position: relative;
+
+    top: 50px;
+
+    left:300px;
+
+    border: 3px solid gray;
+
+}
+
+#controls{
+
+    position: absolute;
+
+    top:50px;
+
+    left:5px;
+
+    padding:20px;
+
+    border: 1px solid gray;
+
+    background-color: green;
+
+    border-radius: 70px;   
+
+}
+
+.lightBorder {
+
+    border: 4px solid white;
+
+    margin-top: 20px;
+
+    margin-bottom: 20px;
+
+}
+
+p{
+
+    margin: 6px;
+
+}
+
+#clearCanvas {
+
+    margin-top: 3px;
+
+}
+      </style>	
+
+  <script>
+
+var canvas,
+    
+    context,
+
+    pull = false,
+
+    startmouse,
+      
+    snapshot;
+
+
+
+	
+	var clickColor = new Array();
+        var curTool;
+
+
+
+function getCanvasCoordinates(event) {
+
+    var x = event.clientX - canvas.getBoundingClientRect().left,
+
+        y = event.clientY - canvas.getBoundingClientRect().top;
+
+    return {x: x, y: y};
+
+}
+
+function takeSnapshot() {
+
+    snapshot = context.getImageData(0, 0, canvas.width, canvas.height);
+
+}
+
+function restoreSnapshot() {
+
+    context.putImageData(snapshot, 0, 0);
+
+}
+
+function drawLine(position) {
+
+    context.beginPath();
+
+    context.moveTo(startmouse.x, startmouse.y);
+
+    context.lineTo(position.x, position.y);
+
+    context.stroke();
+
+}
+
+function drawCircle(position) {
+
+    var radius = Math.sqrt(Math.pow((startmouse.x - position.x), 2) + Math.pow((startmouse.y - position.y), 2));
+
+    context.beginPath();
+
+    context.arc(startmouse.x, startmouse.y, radius, 0, 2 * Math.PI, false);
+
+}
+
+function draw(position) {
+
+        shape = document.querySelector('input[type="radio"][name="shape"]:checked').value,
+
+        lineCap = document.querySelector('input[type="radio"][name="lineCap"]').value;
+
+
+    if (shape === "circle") {
+
+        drawCircle(position);
+
+    }
+
+    if (shape === "line") {
+
+        drawLine(position);
+
+    } 
+
+  context.stroke();
+
+ }
+
+function dragStart(event) {
+
+    pull = true;
+
+    startmouse = getCanvasCoordinates(event);
+
+    takeSnapshot();
+
+}
+
+function drag(event) {
+
+    var position;
+
+    if (pull === true) {
+
+        restoreSnapshot();
+
+        position = getCanvasCoordinates(event);
+
+	draw(position);
+    }
+
+}
+
+function dragStop(event) {
+
+    pull = false;
+
+    restoreSnapshot();
+
+    var position = getCanvasCoordinates(event);
+
+    draw(position);
+
+}
+
+function changeLineWidth() {
+
+    context.lineWidth = this.value;
+
+    event.stopPropagation();
+
+}
+
+function changeStrokeStyle() {
+
+    context.strokeStyle = this.value;
+
+    event.stopPropagation();
+
+}
+
+function eraseCanvas() {
+
+    var clr = confirm("Do you want to clear Canvas image?");
+
+     if (clr) {
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    document.getElementById("canvasimg").style.display = "none";
+  }
+
+}
+    function saveCanvas() {
+
+        document.getElementById("canvasimg").style.border = "2px solid";
+
+        var dataURL = canvas.toDataURL();
+
+        document.getElementById("canvasimg").src = dataURL;
+
+        document.getElementById("canvasimg").style.display = "inline";
+    }
+
+   function init() {
+
+    canvas = document.getElementById("canvas");
+
+    context = canvas.getContext('2d');
+
+    var lineWidth = document.getElementById("lineWidth"),
+
+        strokeColor = document.getElementById("strokeColor"),
+
+        clearCanvas = document.getElementById("clearCanvas");
+
+    context.strokeStyle = strokeColor.value;
+
+    context.lineWidth = lineWidth.value;
+
+    canvas.addEventListener('mousedown', dragStart, false);
+
+    canvas.addEventListener('mousemove', drag, false);
+
+    canvas.addEventListener('mouseup', dragStop, false);
+
+    lineWidth.addEventListener("input", changeLineWidth, false);
+
+    strokeColor.addEventListener("input", changeStrokeStyle, false);
+
+    clearCanvas.addEventListener("click", eraseCanvas, false);
+
+    saveCanvas.addEventListener("click", save, false);
+
+}
+
+    window.addEventListener('load', init, false);
+
+  </script>
+
+ </head>
+
+<body onload="init()">
+
+<canvas id="canvas" width="400" height="400"></canvas>
+
+<div id="controls">
+
+    <div class="lightBorder"> 
+
+        <p><label>Select Color: <input id="strokeColor" type="color"></label></p>
+    
+        <p><label>Line Width: <input id="lineWidth" type="range" step="1"  max="200" value="4"></label></p>
+	</div>
+
+	<div class="lightBorder">
+        <p><input type="radio" name="lineCap"  value="butt" >Butt</p> 
+  	</div>
+
+	<div class="lightBorder">
+        <p><input type="radio" name="shape" value="line" >Line</p>
+
+        <p><input type="radio" name="shape" value="circle">Circle</p>
+         </div>
+
+	<div class="lightBorder">
+        <p><input id="clearCanvas" type="button" value="Clear Canvas" click = "eraseCanvas()" style="background:skyblue;"></p>
+
+	<img id="canvasimg" style="position:absolute;top:2px;left:800px;" style="display:none;">	
+	
+	<p><input id="btn" type ="button" value = "Save" onclick="saveCanvas()" style="background:yellow;"></p>
+
+      </div>
+
+      
+ </body>
+
+</html>
